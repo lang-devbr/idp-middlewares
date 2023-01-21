@@ -4,6 +4,6 @@ to publish golang module: https://go.dev/doc/modules/publishing#:~:text=versioni
 
 export IDP_SECRET
 
-1 - git tag v0.1.1 
-2 - git push origin v0.1.1
-3 - GOPROXY=proxy.golang.org go list -m github.com/lang-devbr/idp-middlewares@v0.1.1
+1 - git tag v0.1.2
+2 - git push origin v0.1.2
+3 - GOPROXY=proxy.golang.org go list -m github.com/lang-devbr/idp-middlewares@v0.1.2
