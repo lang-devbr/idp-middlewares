@@ -17,9 +17,14 @@ func AuthJWT() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 
 		if authHeader == "" {
-			log.Println("authorization header not found")
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
+			cookieAuth, err := getAuthFromCookie(c)
+			if err != nil {
+				log.Println("authorization header or cookie not found")
+				c.AbortWithStatus(http.StatusUnauthorized)
+				return
+			}
+
+			authHeader = cookieAuth
 		}
 
 		tokenString := authHeader[len(BEARER_SCHEMA):]
@@ -104,4 +109,14 @@ func getSecret() (string, error) {
 	}
 
 	return v, nil
+}
+
+func getAuthFromCookie(ctx *gin.Context) (string, error) {
+	c, err := ctx.Cookie("auth")
+
+	if err != nil {
+		return "", err
+	}
+
+	return c, nil
 }
