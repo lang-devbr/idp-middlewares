@@ -11,7 +11,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AuthJWT() gin.HandlerFunc {
+func AuthJWT(authPage, authPageTitle string) gin.HandlerFunc {
+	return AuthJWTWithRedirect("", "")
+}
+
+func AuthJWTWithRedirect(authPage, authPageTitle string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		const BEARER_SCHEMA = "Bearer "
 		authHeader := c.GetHeader("Authorization")
@@ -20,7 +24,7 @@ func AuthJWT() gin.HandlerFunc {
 			cookieAuth, err := getAuthFromCookie(c)
 			if err != nil {
 				log.Println("authorization header or cookie not found")
-				c.AbortWithStatus(http.StatusUnauthorized)
+				abortWithUnauthorized(c, authPage, authPageTitle)
 				return
 			}
 
@@ -31,7 +35,7 @@ func AuthJWT() gin.HandlerFunc {
 
 		if tokenString == "" {
 			log.Println("token not found")
-			c.AbortWithStatus(http.StatusUnauthorized)
+			abortWithUnauthorized(c, authPage, authPageTitle)
 			return
 		}
 
@@ -39,7 +43,7 @@ func AuthJWT() gin.HandlerFunc {
 
 		if err != nil {
 			log.Println("error parsing token")
-			c.AbortWithStatus(http.StatusUnauthorized)
+			abortWithUnauthorized(c, authPage, authPageTitle)
 			return
 		}
 
@@ -52,7 +56,8 @@ func AuthJWT() gin.HandlerFunc {
 			log.Println("Claims[ExpiresAt]: ", claims["exp"])
 		} else {
 			log.Println(err)
-			c.AbortWithStatus(http.StatusUnauthorized)
+			abortWithUnauthorized(c, authPage, authPageTitle)
+			return
 		}
 	}
 }
@@ -119,4 +124,16 @@ func getAuthFromCookie(ctx *gin.Context) (string, error) {
 	}
 
 	return c, nil
+}
+
+func abortWithUnauthorized(c *gin.Context, authPage, authPageTitle string) {
+	if authPage != "" {
+		c.HTML(http.StatusOK, authPage, gin.H{
+			"title": authPageTitle,
+		})
+		return
+	}
+
+	c.AbortWithStatus(http.StatusUnauthorized)
+	return
 }
