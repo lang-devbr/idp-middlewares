@@ -11,11 +11,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AuthJWT(authPage, authPageTitle string) gin.HandlerFunc {
-	return AuthJWTWithRedirect("", "")
+func AuthJWT() gin.HandlerFunc {
+	return AuthJWTWithRedirect("")
 }
 
-func AuthJWTWithRedirect(authPage, authPageTitle string) gin.HandlerFunc {
+func AuthJWTWithRedirect(authPage string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		const BEARER_SCHEMA = "Bearer "
 		authHeader := c.GetHeader("Authorization")
@@ -24,7 +24,7 @@ func AuthJWTWithRedirect(authPage, authPageTitle string) gin.HandlerFunc {
 			cookieAuth, err := getAuthFromCookie(c)
 			if err != nil {
 				log.Println("authorization header or cookie not found")
-				abortWithUnauthorized(c, authPage, authPageTitle)
+				abortWithUnauthorized(c, authPage)
 				return
 			}
 
@@ -35,7 +35,7 @@ func AuthJWTWithRedirect(authPage, authPageTitle string) gin.HandlerFunc {
 
 		if tokenString == "" {
 			log.Println("token not found")
-			abortWithUnauthorized(c, authPage, authPageTitle)
+			abortWithUnauthorized(c, authPage)
 			return
 		}
 
@@ -43,7 +43,7 @@ func AuthJWTWithRedirect(authPage, authPageTitle string) gin.HandlerFunc {
 
 		if err != nil {
 			log.Println("error parsing token")
-			abortWithUnauthorized(c, authPage, authPageTitle)
+			abortWithUnauthorized(c, authPage)
 			return
 		}
 
@@ -56,7 +56,7 @@ func AuthJWTWithRedirect(authPage, authPageTitle string) gin.HandlerFunc {
 			log.Println("Claims[ExpiresAt]: ", claims["exp"])
 		} else {
 			log.Println(err)
-			abortWithUnauthorized(c, authPage, authPageTitle)
+			abortWithUnauthorized(c, authPage)
 			return
 		}
 	}
@@ -126,11 +126,9 @@ func getAuthFromCookie(ctx *gin.Context) (string, error) {
 	return c, nil
 }
 
-func abortWithUnauthorized(c *gin.Context, authPage, authPageTitle string) {
+func abortWithUnauthorized(c *gin.Context, authPage string) {
 	if authPage != "" {
-		c.HTML(http.StatusOK, authPage, gin.H{
-			"title": authPageTitle,
-		})
+		c.Redirect(http.StatusMovedPermanently, authPage)
 		return
 	}
 
