@@ -87,6 +87,32 @@ func ValidateEmail(tokenString, email string) bool {
 	return false
 }
 
+func ValidateAdmin(tokenString string) bool {
+	const BEARER_SCHEMA = "Bearer "
+
+	if tokenString == "" {
+		return false
+	}
+
+	tokenString = tokenString[len(BEARER_SCHEMA):]
+
+	if tokenString == "" {
+		return false
+	}
+
+	token, err := validateToken(tokenString)
+	if err != nil {
+		return false
+	}
+
+	if token.Valid {
+		claims := token.Claims.(jwt.MapClaims)
+		return claims["admin"].(bool)
+	}
+
+	return false
+}
+
 func validateToken(tokenString string) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
